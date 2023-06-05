@@ -56,6 +56,21 @@ async function run() {
       res.send(result)
     })
      
+    // delete room 
+    app.delete('/room/:id', async(req,res)=>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result = await roomsCollection.deleteOne(query)
+      res.send(result)
+    })
+    // get rooms with email
+    app.get('/rooms/:email', async(req,res)=>{
+      const email = req.params.email 
+      const query = {'host.email':email}
+      const result = await roomsCollection.find(query).toArray()
+      res.send(result)
+    })
+
       // get room you will see room details page
 
       app.get('/room/:id', async(req,res)=>{
@@ -64,6 +79,9 @@ async function run() {
         const result = await roomsCollection.findOne(query)
         res.send(result)
       })
+
+
+
     // save a room in database when user added new room
     app.post('/rooms', async(req,res)=>{
       const room = req.body;
@@ -71,6 +89,47 @@ async function run() {
       res.send(result)
     })
 
+
+    //  get bookings for guest 
+    app.get('/bookings', async(req,res)=>{
+      const email = req.query.email;
+      if(!email){
+        res.send([])
+      }
+      const query = {'guest.email': email}
+      const result = await bookingsCollection.find(query).toArray()
+      res.send(result)
+    })
+      // save a room booking in database
+      app.post('/bookings', async(req,res)=>{
+        const booking = req.body;
+        const result = await bookingsCollection.insertOne(booking)
+        res.send(result)
+      })
+ 
+       // delete booking
+       app.delete('/bookings/:id', async(req,res)=>{
+        const id = req.params.id;
+        const query = {_id: new ObjectId(id)}
+        const result = await bookingsCollection.deleteOne(query)
+        res.send(result)
+       })
+       
+      // update room booing status
+      app.patch('/rooms/status/:id', async(req,res)=>{
+        const id = req.params.id;
+        const status = req.body.status;
+        const query = {_id: new ObjectId(id)}
+        const updateDoc = {
+          $set: {
+            booked: status,
+          },
+        }
+        const update = await roomsCollection.updateOne(query,updateDoc)
+        res.send(update)
+      })
+
+    
 
     // Send a ping to confirm a successful connection
     await client.db('admin').command({ ping: 1 })
